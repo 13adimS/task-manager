@@ -1,7 +1,10 @@
 package ru.volnenko.se.command.data.bin;
 
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import ru.volnenko.se.command.AbstractCommand;
+import ru.volnenko.se.command.Command;
+import ru.volnenko.se.command.CommandEvent;
 import ru.volnenko.se.constant.DataConstant;
 import ru.volnenko.se.entity.Project;
 import ru.volnenko.se.entity.Task;
@@ -13,7 +16,7 @@ import java.io.ObjectInputStream;
  * @author Denis Volnenko
  */
 @Component
-public final class DataBinaryLoadCommand extends AbstractCommand {
+public class DataBinaryLoadCommand extends Command {
 
     @Override
     public String command() {
@@ -26,7 +29,9 @@ public final class DataBinaryLoadCommand extends AbstractCommand {
     }
 
     @Override
-    public void execute() throws Exception {
+    @Async("CustomAsyncExecutor")
+    @EventListener(condition = "#event.command == 'data-bin-load'")
+    public void execute(CommandEvent event) throws Exception {
         System.out.println("[DATA BINARY LOAD]");
         final FileInputStream fileInputStream = new FileInputStream(DataConstant.FILE_BINARY);
         final ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);

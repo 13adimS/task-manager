@@ -1,8 +1,7 @@
 package ru.volnenko.se.controller;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Controller;
 import ru.volnenko.se.api.repository.IProjectRepository;
 import ru.volnenko.se.api.repository.ITaskRepository;
@@ -13,11 +12,6 @@ import ru.volnenko.se.api.service.ServiceLocator;
 import ru.volnenko.se.command.*;
 import ru.volnenko.se.error.CommandAbsentException;
 import ru.volnenko.se.error.CommandCorruptException;
-import ru.volnenko.se.repository.ProjectRepository;
-import ru.volnenko.se.repository.TaskRepository;
-import ru.volnenko.se.service.DomainService;
-import ru.volnenko.se.service.ProjectService;
-import ru.volnenko.se.service.TaskService;
 
 import javax.annotation.Resource;
 import java.util.*;
@@ -43,7 +37,10 @@ public class Bootstrap implements ServiceLocator {
     @Resource
     private IDomainService domainService;
 
-    private final Map<String, AbstractCommand> commands = new LinkedHashMap<>();
+    @Autowired
+    private ApplicationEventPublisher publisher;
+
+    private final Map<String, Command> commands = new LinkedHashMap<>();
 
     private final Scanner scanner = new Scanner(System.in);
 
@@ -67,7 +64,7 @@ public class Bootstrap implements ServiceLocator {
         return domainService;
     }
 
-    public void registry(final AbstractCommand command) {
+    public void registry(final Command command) {
         final String cliCommand = command.command();
         final String cliDescription = command.description();
         if (cliCommand == null || cliCommand.isEmpty()) throw new CommandCorruptException();
@@ -75,11 +72,11 @@ public class Bootstrap implements ServiceLocator {
         commands.put(cliCommand, command);
     }
 
-    public void registry(final List<AbstractCommand> commands) {
-        for (AbstractCommand command: commands) registry(command);
+    public void registry(final List<Command> commands) {
+        for (Command command: commands) registry(command);
     }
 
-    public void init(final List<AbstractCommand> commands) throws Exception {
+    public void init(final List<Command> commands) throws Exception {
         if (commands == null || commands.size() == 0) throw new CommandAbsentException();
         registry(commands);
         start();
@@ -90,18 +87,11 @@ public class Bootstrap implements ServiceLocator {
         String command = "";
         while (!"exit".equals(command)) {
             command = scanner.nextLine();
-            execute(command);
+            publisher.publishEvent(new CommandEvent(this, command));
         }
     }
 
-    private void execute(final String command) throws Exception {
-        if (command == null || command.isEmpty()) return;
-        final AbstractCommand abstractCommand = commands.get(command);
-        if (abstractCommand == null) return;
-        abstractCommand.execute();
-    }
-
-    public List<AbstractCommand> getListCommand() {
+    public List<Command> getListCommand() {
         return new ArrayList<>(commands.values());
     }
 

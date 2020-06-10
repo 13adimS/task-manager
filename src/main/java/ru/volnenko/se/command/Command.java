@@ -3,12 +3,11 @@ package ru.volnenko.se.command;
 import ru.volnenko.se.controller.Bootstrap;
 
 import javax.annotation.Resource;
-import java.io.IOException;
 
 /**
  * @author Denis Volnenko
  */
-public abstract class AbstractCommand {
+public abstract class Command {
 
     @Resource
     protected Bootstrap bootstrap;
@@ -21,7 +20,7 @@ public abstract class AbstractCommand {
         this.bootstrap = bootstrap;
     }
 
-    public abstract void execute() throws Exception;
+    public abstract void execute(CommandEvent command) throws Exception;
 
     public abstract String command();
 

@@ -1,7 +1,10 @@
 package ru.volnenko.se.command.data.bin;
 
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import ru.volnenko.se.command.AbstractCommand;
+import ru.volnenko.se.command.Command;
+import ru.volnenko.se.command.CommandEvent;
 import ru.volnenko.se.constant.DataConstant;
 import ru.volnenko.se.entity.Project;
 import ru.volnenko.se.entity.Task;
@@ -15,7 +18,7 @@ import java.nio.file.Files;
  * @author Denis Volnenko
  */
 @Component
-public final class DataBinarySaveCommand extends AbstractCommand {
+public class DataBinarySaveCommand extends Command {
 
     @Override
     public String command() {
@@ -28,7 +31,9 @@ public final class DataBinarySaveCommand extends AbstractCommand {
     }
 
     @Override
-    public void execute() throws Exception {
+    @Async("CustomAsyncExecutor")
+    @EventListener(condition = "#event.command == 'data-bin-save'")
+    public void execute(CommandEvent event) throws Exception {
         System.out.println("[DATA BINARY SAVE]");
         final Project[] projects = bootstrap.getProjectService().getListProject().toArray(new Project[] {});
         final Task[] tasks = bootstrap.getTaskService().getListTask().toArray(new Task[] {});

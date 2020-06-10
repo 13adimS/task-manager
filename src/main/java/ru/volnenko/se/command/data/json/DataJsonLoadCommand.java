@@ -1,8 +1,11 @@
 package ru.volnenko.se.command.data.json;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import ru.volnenko.se.command.AbstractCommand;
+import ru.volnenko.se.command.Command;
+import ru.volnenko.se.command.CommandEvent;
 import ru.volnenko.se.constant.DataConstant;
 import ru.volnenko.se.entity.Domain;
 
@@ -13,7 +16,7 @@ import java.nio.file.Files;
  * @author Denis Volnenko
  */
 @Component
-public final class DataJsonLoadCommand extends AbstractCommand {
+public class DataJsonLoadCommand extends Command {
 
     @Override
     public String command() {
@@ -26,7 +29,9 @@ public final class DataJsonLoadCommand extends AbstractCommand {
     }
 
     @Override
-    public void execute() throws Exception {
+    @Async("CustomAsyncExecutor")
+    @EventListener(condition = "#event.command == 'data-json-load'")
+    public void execute(CommandEvent event) throws Exception {
         System.out.println("[LOAD JSON DATA]");
         final File file = new File(DataConstant.FILE_JSON);
         if (!exists(file)) return;

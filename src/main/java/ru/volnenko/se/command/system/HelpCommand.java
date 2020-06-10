@@ -1,13 +1,16 @@
 package ru.volnenko.se.command.system;
 
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import ru.volnenko.se.command.AbstractCommand;
+import ru.volnenko.se.command.Command;
+import ru.volnenko.se.command.CommandEvent;
 
 /**
  * @author Denis Volnenko
  */
 @Component
-public final class HelpCommand extends AbstractCommand {
+public class HelpCommand extends Command {
 
     @Override
     public String command() {
@@ -20,10 +23,12 @@ public final class HelpCommand extends AbstractCommand {
     }
 
     @Override
-    public void execute() {
-        for (AbstractCommand command: bootstrap.getListCommand()) {
+    @Async("CustomAsyncExecutor")
+    @EventListener(condition = "#event.command == 'help'")
+    public void execute(CommandEvent event) {
+        event.getSource();
+        for (Command command: bootstrap.getListCommand()) {
             System.out.println(command.command()+ ": " + command.description());
         }
     }
-
 }
